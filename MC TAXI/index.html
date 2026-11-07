@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MC Taxi Daily Income Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#13161b">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#13161b;--card:#1c2027;--line:#2a2f38;--text:#f2f3f5;--mute:#8d95a3;--amber:#f5b82e;--ink:#1a1400;--red:#ff7a70;--green:#5fd39a;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:480px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+h1{font-size:17px;margin:0;font-weight:700}
+.date{color:var(--mute);font-size:14px}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px;border-top:4px solid var(--amber)}
+.hero .label{color:var(--mute);font-size:15px}
+.net{font-size:clamp(48px,16vw,68px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 10px}
+.stat .label{color:var(--mute);font-size:12px;line-height:1.25}
+.stat .val{font-size:18px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.entry{display:flex;gap:8px;margin:16px 0 8px}
+.field{flex:1;min-width:0;display:flex;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:0 14px}
+.field:focus-within{border-color:var(--amber)}
+.field .pe{display:flex;align-items:center;justify-content:center;height:60px;margin-right:8px;color:var(--mute)}
+input{width:100%;min-width:0;background:none;border:0;outline:0;color:var(--text);font:inherit;font-size:26px;font-weight:700;height:60px}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;min-height:56px;padding:0 18px;font-weight:700;font-size:16px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.add{background:var(--amber);color:var(--ink);height:60px;padding:0 20px}
+.add:active{transform:scale(.97)}
+input::placeholder{font-size:16px;font-weight:500;color:var(--mute);opacity:1}
+.entry button{flex:0 0 140px;padding:0}
+.entry.tip{margin-top:0}
+.add2{background:transparent;color:var(--amber);border:2px solid var(--amber);height:60px}
+.add2:active{transform:scale(.97)}
+.rate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px;min-height:60px}
+.rate label{color:var(--mute);font-size:14px;line-height:1.3}
+.rin{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:10px;padding:0 12px;background:var(--bg)}
+.rin:focus-within{border-color:var(--amber)}
+.rin input{width:64px;height:40px;font-size:18px;text-align:right;font-weight:700}
+.rin span{font-size:18px;color:var(--mute)}
+.tag{font-style:normal;font-size:11px;font-weight:700;color:var(--green);border:1px solid var(--green);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.add3{background:transparent;color:var(--red);border:2px solid var(--red);height:60px}
+.add3:active{transform:scale(.97)}
+.tag.exp{color:var(--red);border-color:var(--red)}
+.err{color:var(--red);font-size:14px;min-height:20px;margin:0 0 4px 4px}
+h2{font-size:15px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+h2 small{color:var(--mute);font-weight:400;font-size:13px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .amt{font-size:18px;font-weight:700;flex:1;font-variant-numeric:tabular-nums}
+.row .time{color:var(--mute);font-size:14px}
+.del{background:none;color:var(--mute);min-height:40px;padding:0 12px;font-size:14px;border:1px solid var(--line);border-radius:10px}
+.del.sure{color:var(--red);border-color:var(--red)}
+.empty{padding:22px 14px;color:var(--mute);text-align:center;font-size:15px}
+.end{width:100%;margin-top:18px;background:transparent;color:var(--text);border:2px solid var(--line);height:60px}
+.end:active{background:var(--card)}
+.link{background:none;color:var(--amber);min-height:44px;padding:0;font-size:15px;margin-top:8px}
+.login{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;padding:16px;z-index:10;overflow:auto}
+body.locked .login{display:flex}
+body.locked main{display:none}
+.lbox{width:100%;max-width:380px}
+.lbox h1{font-size:22px;margin:16px 0 2px}
+.lbox .sub{color:var(--mute);font-size:14px;margin:0 0 4px}
+.logo{width:64px;height:64px;border-radius:18px;background:var(--amber);color:var(--ink);font-size:38px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.lf{display:block;margin-top:14px}
+.lf span{display:block;color:var(--mute);font-size:14px;margin-bottom:6px}
+.lf input{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:0 14px;font-size:18px;font-weight:500;height:56px}
+.lf input:focus{border-color:var(--amber)}
+.keep{display:flex;align-items:center;gap:10px;margin:14px 0 4px;color:var(--mute);font-size:14px;min-height:44px}
+.keep input{width:22px;height:22px;accent-color:var(--amber)}
+.lbox .primary{width:100%;height:60px}
+.tools{display:flex;flex-wrap:wrap;gap:6px 20px}
+.note{color:var(--mute);font-size:14px;min-height:20px;margin:4px 0 0}
+.day{border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.day summary{display:flex;justify-content:space-between;gap:10px;padding:14px;cursor:pointer;list-style:none;min-height:48px}
+.day summary::-webkit-details-marker{display:none}
+.day .n{font-weight:700;font-variant-numeric:tabular-nums}
+.day .meta{padding:0 14px 14px;color:var(--mute);font-size:14px;line-height:1.7}
+.day .meta b{color:var(--text);font-weight:600}
+.overlay{position:fixed;inset:0;background:rgba(5,7,10,.78);display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:5}
+.overlay.on{display:flex}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:22px;width:100%;max-width:480px;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet h3{margin:0 0 2px;font-size:17px}
+.sheet .sub{color:var(--mute);font-size:14px;margin-bottom:16px}
+.line{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:16px}
+.line b{font-variant-numeric:tabular-nums}
+.final{margin:14px 0 18px;padding:16px;background:var(--bg);border-radius:14px;border:1px solid var(--amber)}
+.final .label{color:var(--mute);font-size:14px}
+.final .big{font-size:42px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.btns{display:grid;gap:8px}
+.primary{background:var(--amber);color:var(--ink)}
+.ghost{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+.cols{display:block}
+@media (min-width:600px){
+  main{max-width:560px;padding-top:28px}
+  .overlay{align-items:center}
+}
+@media (hover:hover){
+  .add:hover,.add2:hover,.add3:hover,.primary:hover{filter:brightness(1.08)}
+  .end:hover,.del:hover,.ghost:hover{border-color:var(--amber)}
+  .link:hover{text-decoration:underline}
+}
+@media (max-width:360px){
+  main{padding-left:12px;padding-right:12px}
+  .field span,input{font-size:22px}
+  .add{padding:0 14px;font-size:15px}
+}
+@media (prefers-reduced-motion:no-preference){.add{transition:transform .08s}}
+</style>
+</head>
+<body class="locked">
+<div class="login" id="login">
+  <form class="lbox" id="lform">
+    <div class="logo"><svg viewBox="0 0 48 48" width="40" height="40" fill="none" stroke="#1a1400" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(1 0)"><path d="M16 38V10h10a8.5 8.5 0 0 1 0 17H16"/><path d="M10 18h26M10 24h26"/></g></svg></div>
+    <h1>MC Taxi Income Tracker</h1>
+    <p class="sub">Log in to continue</p>
+    <label class="lf"><span>Username</span><input id="lu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+    <label class="lf"><span>Password</span><input id="lp" type="password" autocomplete="current-password"></label>
+    <label class="keep"><input type="checkbox" id="lk" checked> Keep me logged in on this device</label>
+    <p class="err" id="lerr" role="alert"></p>
+    <button class="primary" type="submit">LOG IN</button>
+  </form>
+</div>
+
+<main>
+  <header><h1>MC Taxi Income Tracker</h1><span class="date" id="date"></span></header>
+
+  <div class="cols"><div class="col">
+
+  <section class="hero" aria-live="polite">
+    <div class="label">Net earnings (take-home)</div>
+    <div class="net" id="net">₱0</div>
+  </section>
+  <section class="stats">
+    <div class="stat"><div class="label">Gross earnings</div><div class="val" id="gross">₱0</div></div>
+    <div class="stat"><div class="label" id="commL">MC Taxi commission (20%)</div><div class="val" id="comm">₱0</div></div>
+    <div class="stat"><div class="label">Tips (no commission)</div><div class="val" id="tips">₱0</div></div>
+    <div class="stat"><div class="label">Gasoline fees</div><div class="val" id="gas">₱0</div></div>
+    <div class="stat"><div class="label">Other fees</div><div class="val" id="fee">₱0</div></div>
+    <div class="stat"><div class="label">Total trips</div><div class="val" id="trips">0</div></div>
+  </section>
+
+  <div class="rate">
+    <label for="rate">MC Taxi commission rate</label>
+    <div class="rin"><input id="rate" type="text" inputmode="decimal" autocomplete="off" value="20"><span>%</span></div>
+  </div>
+
+  <div class="entry">
+    <label class="field"><span class="pe"><svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(1 0)"><path d="M16 38V10h10a8.5 8.5 0 0 1 0 17H16"/><path d="M10 18h26M10 24h26"/></g></svg></span><input id="amt" type="text" inputmode="decimal" placeholder="Trip earning" autocomplete="off" aria-label="Trip earning in pesos"></label>
+    <button class="add" id="add">ADD EARNING</button>
+  </div>
+  <div class="entry tip">
+    <label class="field"><span class="pe"><svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(1 0)"><path d="M16 38V10h10a8.5 8.5 0 0 1 0 17H16"/><path d="M10 18h26M10 24h26"/></g></svg></span><input id="tipAmt" type="text" inputmode="decimal" placeholder="Tip (no commission)" autocomplete="off" aria-label="Tip in pesos"></label>
+    <button class="add2" id="addTip">ADD TIP</button>
+  </div>
+  <h2>Expenses <small>deducted from your income</small></h2>
+  <div class="entry tip">
+    <label class="field"><span class="pe"><svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(1 0)"><path d="M16 38V10h10a8.5 8.5 0 0 1 0 17H16"/><path d="M10 18h26M10 24h26"/></g></svg></span><input id="gasAmt" type="text" inputmode="decimal" placeholder="Gasoline fee" autocomplete="off" aria-label="Gasoline fee in pesos"></label>
+    <button class="add3" id="addGas">ADD GAS</button>
+  </div>
+  <div class="entry tip">
+    <label class="field"><span class="pe"><svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(1 0)"><path d="M16 38V10h10a8.5 8.5 0 0 1 0 17H16"/><path d="M10 18h26M10 24h26"/></g></svg></span><input id="feeAmt" type="text" inputmode="decimal" placeholder="Other fee" autocomplete="off" aria-label="Other fee in pesos"></label>
+    <button class="add3" id="addFee">ADD FEE</button>
+  </div>
+  <p class="err" id="err" role="alert"></p>
+
+  </div><div class="col">
+  <h2>Today’s trips <small id="count"></small></h2>
+  <div class="list" id="list"></div>
+
+  <button class="end" id="end">END DAY</button>
+  <div class="tools">
+    <button class="link" id="histBtn">Previous days</button>
+    <button class="link" id="bk">Back up data</button>
+    <button class="link" id="rs">Restore backup</button>
+    <button class="link" id="pwBtn">Change password</button>
+    <button class="link" id="logout">Log out</button>
+  </div>
+  <input type="file" id="file" accept=".json,application/json" hidden>
+  <p class="note" id="msg" role="status"></p>
+  <div class="list" id="hist" hidden></div>
+  </div></div>
+</main>
+
+<div class="overlay" id="ov">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <h3 id="sTitle">Day summary</h3>
+    <div class="sub" id="sSub"></div>
+    <div class="final"><div class="label">You actually made</div><div class="big" id="sNet"></div></div>
+    <div class="line"><span>Gross earnings (fares)</span><b id="sGross"></b></div>
+    <div class="line"><span id="sCommL">MC Taxi deducted (20%)</span><b id="sComm"></b></div>
+    <div class="line"><span>Tips (no commission)</span><b id="sTips"></b></div>
+    <div class="line"><span>Gasoline fees</span><b id="sGas"></b></div>
+    <div class="line"><span>Other fees</span><b id="sFee"></b></div>
+    <div class="line" style="margin-bottom:16px"><span>Total trips</span><b id="sTrips"></b></div>
+    <div class="btns">
+      <button class="primary" id="newDay">START NEW DAY</button>
+      <button class="ghost" id="keep">Keep working</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pwov">
+  <form class="sheet" id="pform" role="dialog" aria-modal="true" aria-label="Change password">
+    <h3>Change password</h3>
+    <div class="sub">Choose a password only you know.</div>
+    <label class="lf"><span>Current password</span><input id="pc" type="password" autocomplete="current-password"></label>
+    <label class="lf"><span>New password</span><input id="pn" type="password" autocomplete="new-password"></label>
+    <p class="err" id="perr" role="alert"></p>
+    <div class="btns">
+      <button class="primary" type="submit">SAVE PASSWORD</button>
+      <button class="ghost" type="button" id="pcancel">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  var KEY='mctaxi.v1';
+  var state={entries:[],day:dayKey(new Date()),history:[],rate:20};
+  var $=function(id){return document.getElementById(id)};
+
+  function dayKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  var db=null;
+  function valid(s){return !!s&&Array.isArray(s.entries)&&Array.isArray(s.history)&&typeof s.day==='string'}
+  function openDb(){return new Promise(function(res){try{var r=indexedDB.open('mctaxi',1);r.onupgradeneeded=function(){r.result.createObjectStore('kv')};r.onsuccess=function(){res(r.result)};r.onerror=function(){res(null)};r.onblocked=function(){res(null)}}catch(e){res(null)}})}
+  function dbGet(){return new Promise(function(res){if(!db)return res(null);try{var q=db.transaction('kv').objectStore('kv').get('state');q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})}
+  function save(){state.updated=Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+    if(db){try{db.transaction('kv','readwrite').objectStore('kv').put(JSON.parse(JSON.stringify(state)),'state')}catch(e){}}}
+  function load(){
+    var ls=null;try{ls=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+    return openDb().then(function(d){db=d;return dbGet()}).then(function(s){
+      var best=null;[ls,s].forEach(function(c){if(valid(c)&&(!best||(c.updated||0)>(best.updated||0)))best=c});
+      if(best)state=best;
+      norm();
+      if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist()}catch(e){}}
+    })}
+  var LBL={tip:'tip',gas:'gasoline',fee:'other fee'},TAG={tip:'Tip',gas:'Gasoline',fee:'Other fee'};
+  function norm(){if(typeof state.rate!=='number'||!(state.rate>=0&&state.rate<=100))state.rate=20}
+  function peso(c){var neg=c<0;c=Math.abs(c);var w=c%100===0;return (neg?'−':'')+'₱'+(c/100).toLocaleString('en-PH',{minimumFractionDigits:w?0:2,maximumFractionDigits:2})}
+  function calc(list,rate){if(typeof rate!=='number')rate=20;var g=0,tp=0,ga=0,fe=0,n=0;list.forEach(function(e){if(e.k==='tip')tp+=e.c;else if(e.k==='gas')ga+=e.c;else if(e.k==='fee')fe+=e.c;else{g+=e.c;n++}});var m=Math.round(g*rate/100);return{gross:g,comm:m,tips:tp,gas:ga,fee:fe,net:g-m+tp-ga-fe,trips:n}}
+  function fmtTime(t){return new Date(t).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'})}
+  function fmtDate(k){var p=k.split('-');return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-PH',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+
+  function render(){
+    var t=calc(state.entries,state.rate),n=state.entries.length;
+    $('date').textContent=fmtDate(state.day);
+    $('net').textContent=peso(t.net);
+    $('gross').textContent=peso(t.gross);
+    $('comm').textContent=peso(t.comm);
+    $('trips').textContent=t.trips;
+    $('tips').textContent=peso(t.tips);
+    $('gas').textContent=peso(t.gas);
+    $('fee').textContent=peso(t.fee);
+    $('net').style.color=t.net<0?'var(--red)':'';
+    $('commL').textContent='MC Taxi commission ('+state.rate+'%)';
+    if(document.activeElement!==$('rate'))$('rate').value=state.rate;
+    $('count').textContent=n?n+(n===1?' entry':' entries'):'';
+    var L=$('list');
+    if(!n){L.innerHTML='<div class="empty">No trips yet. Type an amount above and tap ADD EARNING.</div>'}
+    else{L.innerHTML=state.entries.slice().reverse().map(function(e){
+      return '<div class="row"><span class="amt">'+peso(e.c)+(e.k?' <em class="tag'+(e.k==='tip'?'':' exp')+'">'+TAG[e.k]+'</em>':'')+'</span><span class="time">'+fmtTime(e.t)+'</span><button class="del" data-id="'+e.id+'" aria-label="Delete '+peso(e.c)+' entry">Delete</button></div>'}).join('')}
+    renderHist();
+  }
+
+  function renderHist(){
+    var H=$('hist');
+    if(!state.history.length){H.innerHTML='<div class="empty">No saved days yet. Days you end are kept here.</div>';return}
+    H.innerHTML=state.history.slice().reverse().map(function(d){
+      var t=calc(d.entries,d.rate),r=(typeof d.rate==='number'?d.rate:20);
+      var rows=d.entries.map(function(e){return '<b>'+peso(e.c)+'</b>'+(e.k?' ('+LBL[e.k]+')':'')+' at '+fmtTime(e.t)}).join('<br>');
+      return '<details class="day"><summary><span>'+esc(fmtDate(d.day))+'</span><span class="n">'+peso(t.net)+'</span></summary><div class="meta">Gross '+peso(t.gross)+' · Commission ('+r+'%) '+peso(t.comm)+' · Tips '+peso(t.tips)+' · Gasoline '+peso(t.gas)+' · Other fees '+peso(t.fee)+' · '+t.trips+' trips<br>'+rows+'</div></details>'}).join('');
+  }
+
+  function addEntry(inp,kind){
+    var raw=$(inp).value.replace(/,/g,'').trim();
+    var n=parseFloat(raw);
+    if(!raw||!isFinite(n)||n<=0||!/^\d*\.?\d{0,2}$/.test(raw)){$('err').textContent='Enter an amount greater than 0, like 150 or 150.50.';$(inp).focus();return}
+    $('err').textContent='';
+    var e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),c:Math.round(n*100),t:Date.now()};
+    if(kind)e.k=kind;
+    state.entries.push(e);
+    save();$(inp).value='';render();$(inp).focus();
+  }
+  function add(){addEntry('amt')}
+
+  var armed=null,armTimer=null;
+  $('list').addEventListener('click',function(ev){
+    var b=ev.target.closest('.del');if(!b)return;
+    var id=b.getAttribute('data-id');
+    if(armed===id){state.entries=state.entries.filter(function(e){return e.id!==id});armed=null;save();render();return}
+    armed=id;b.textContent='Tap to confirm';b.classList.add('sure');
+    clearTimeout(armTimer);armTimer=setTimeout(function(){armed=null;render()},3000);
+  });
+
+  $('add').addEventListener('click',add);
+  $('addTip').addEventListener('click',function(){addEntry('tipAmt','tip')});
+  $('tipAmt').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addEntry('tipAmt','tip')}});
+  [['gasAmt','gas','addGas'],['feeAmt','fee','addFee']].forEach(function(x){
+    $(x[2]).addEventListener('click',function(){addEntry(x[0],x[1])});
+    $(x[0]).addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addEntry(x[0],x[1])}});
+  });
+  var RATE_OK=/^\d{1,3}(\.\d{0,2})?$/;
+  $('rate').addEventListener('input',function(){var v=this.value.trim();
+    if(RATE_OK.test(v)&&parseFloat(v)<=100){state.rate=parseFloat(v);$('err').textContent='';save();render()}});
+  $('rate').addEventListener('change',function(){var v=this.value.trim();
+    if(!(RATE_OK.test(v)&&parseFloat(v)<=100))$('err').textContent='Commission must be a number from 0 to 100.';
+    this.value=state.rate});
+  $('amt').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();add()}});
+
+  $('end').addEventListener('click',function(){
+    if(!state.entries.length){$('err').textContent='Add at least one earning before ending the day.';return}
+    var t=calc(state.entries,state.rate);
+    $('sSub').textContent=fmtDate(state.day);
+    $('sNet').textContent=peso(t.net);$('sGross').textContent=peso(t.gross);
+    $('sComm').textContent='−'+peso(t.comm);$('sCommL').textContent='MC Taxi deducted ('+state.rate+'%)';$('sTips').textContent='+'+peso(t.tips);$('sGas').textContent=t.gas?'−'+peso(t.gas):peso(0);$('sFee').textContent=t.fee?'−'+peso(t.fee):peso(0);$('sNet').style.color=t.net<0?'var(--red)':'';$('sTrips').textContent=t.trips;
+    $('ov').classList.add('on');$('newDay').focus();
+  });
+  $('keep').addEventListener('click',function(){$('ov').classList.remove('on')});
+  $('newDay').addEventListener('click',function(){
+    state.history.push({day:state.day,endedAt:Date.now(),entries:state.entries,rate:state.rate});
+    state.entries=[];state.day=dayKey(new Date());
+    save();$('ov').classList.remove('on');render();window.scrollTo(0,0);
+  });
+  $('histBtn').addEventListener('click',function(){
+    var h=$('hist');h.hidden=!h.hidden;
+    $('histBtn').textContent=h.hidden?'Previous days':'Hide previous days';
+  });
+
+  function say(t){$('msg').textContent=t}
+  $('bk').addEventListener('click',function(){
+    try{
+      var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download='mc-taxi-backup-'+dayKey(new Date())+'.json';
+      document.body.appendChild(a);a.click();a.remove();
+      say('Backup saved to your downloads.');
+    }catch(e){say('Backup failed on this browser.')}
+  });
+  $('rs').addEventListener('click',function(){$('file').click()});
+  $('file').addEventListener('change',function(){
+    var f=this.files[0];if(!f)return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{var s=JSON.parse(r.result);
+        if(!valid(s))throw 0;
+        state=s;norm();save();render();say('Backup restored. Your earnings and previous days are back.');
+      }catch(e){say('That file is not a valid MC Taxi backup.')}
+      $('file').value='';
+    };
+    r.readAsText(f);
+  });
+
+  // Login (a simple on-device gate; the password is stored as a hash in this browser)
+  var AUTH='mctaxi.auth',CRED='mctaxi.cred';
+  function sha(p){
+    if(window.crypto&&crypto.subtle&&window.TextEncoder){
+      return crypto.subtle.digest('SHA-256',new TextEncoder().encode('mctaxi:'+p)).then(function(b){
+        return Array.prototype.map.call(new Uint8Array(b),function(x){return x.toString(16).padStart(2,'0')}).join('')});
+    }
+    return Promise.resolve('p:'+p);
+  }
+  function getCred(){try{return JSON.parse(localStorage.getItem(CRED)||'null')}catch(e){return null}}
+  function isAuthed(){try{return localStorage.getItem(AUTH)==='1'||sessionStorage.getItem(AUTH)==='1'}catch(e){return false}}
+  function check(u,p){
+    var c=getCred(),name=u.trim().toLowerCase();
+    if(!c)return Promise.resolve(name==='admin'&&p==='Admin');
+    return sha(p).then(function(h){return name===c.u&&h===c.h});
+  }
+  if(isAuthed())document.body.classList.remove('locked');
+  $('lform').addEventListener('submit',function(e){
+    e.preventDefault();
+    check($('lu').value,$('lp').value).then(function(ok){
+      if(!ok){$('lerr').textContent='Wrong username or password. Try again.';$('lp').select();return}
+      try{if($('lk').checked)localStorage.setItem(AUTH,'1');else sessionStorage.setItem(AUTH,'1')}catch(x){}
+      $('lerr').textContent='';$('lp').value='';
+      document.body.classList.remove('locked');
+    });
+  });
+  $('logout').addEventListener('click',function(){
+    try{localStorage.removeItem(AUTH);sessionStorage.removeItem(AUTH)}catch(x){}
+    $('lu').value='';$('lp').value='';document.body.classList.add('locked');window.scrollTo(0,0);
+  });
+  $('pwBtn').addEventListener('click',function(){
+    $('pc').value='';$('pn').value='';$('perr').textContent='';$('pwov').classList.add('on');$('pc').focus();
+  });
+  $('pcancel').addEventListener('click',function(){$('pwov').classList.remove('on')});
+  $('pform').addEventListener('submit',function(e){
+    e.preventDefault();
+    var cu=(getCred()||{u:'admin'}).u,np=$('pn').value;
+    check(cu,$('pc').value).then(function(ok){
+      if(!ok){$('perr').textContent='Current password is not correct.';return}
+      if(np.length<4){$('perr').textContent='New password must be at least 4 characters.';return}
+      return sha(np).then(function(h){
+        try{localStorage.setItem(CRED,JSON.stringify({u:cu,h:h}))}catch(x){}
+        $('pwov').classList.remove('on');say('Password changed.');
+      });
+    });
+  });
+
+  if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(function(){})}
+  load().then(render,render);
+})();
+</script>
+</body>
+</html>
